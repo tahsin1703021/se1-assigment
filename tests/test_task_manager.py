@@ -12,16 +12,20 @@ class TestTaskManager(unittest.TestCase):
 		self.manager = TaskManager(self.storage)
 
 	def test_add_task(self):
-		task = self.manager.add_task("Test Task", "Description")
+		self.storage.get_task.return_value = None
+
+		task = self.manager.add_task("Buy a Car", "Description")
+		
 		self.storage.save_task.assert_called_once()
-		self.assertEqual(task.title, "Test Task")
+		self.assertEqual(task.title, "Buy a Car")
 		self.assertEqual(task.description, "Description")
+
 
 	def test_list_tasks_exclude_completed(self):
 		tasks = [
-		    Task("Task 1", "Description 1"),
-		    Task("Task 2", "Description 2"),
-		    Task("Task 3", "Description 3")
+		    Task("Buy a Car", "Must be a 4 wheeler"),
+		    Task("Buy a House", "Must have a basketball court"),
+		    Task("Play basketball", "Need to train a lot more")
 		]
 		tasks[1].completed = True
 		self.storage.get_all_tasks.return_value = tasks
@@ -31,16 +35,21 @@ class TestTaskManager(unittest.TestCase):
 
 	def test_generate_report(self):
 		tasks = [
-		    Task("Task 1", "Description 1"),
-		    Task("Task 2", "Description 2"),
-		    Task("Task 3", "Description 3")
+			Task("Buy a Car", "Must be a 4 wheeler"),
+		    Task("Buy a House", "Must have a basketball court"),
+		    Task("Play basketball", "Need to train a lot more")
 		]
+		
 		tasks[0].completed = True
+		tasks[1].completed = True  # Mark another task as completed
+
 		self.storage.get_all_tasks.return_value = tasks
 		report = self.manager.generate_report()
+		
 		self.assertEqual(report["total"], 3)
-		self.assertEqual(report["completed"], 2)
+		self.assertEqual(report["completed"], 2)  # Now two tasks are completed
 		self.assertEqual(report["pending"], 1)
+
 
 	def test_complete_nonexistent_task(self):
 		self.storage.get_task.return_value = None
